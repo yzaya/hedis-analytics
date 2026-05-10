@@ -225,3 +225,89 @@ correct denominator for 2021 HEDIS measures.
 ### ETL update
 etl/load_cms_data.py updated: beneficiary_2025.csv → beneficiary_2021.csv.
 Beneficiary table truncated and reloaded. Row count verified: 8,246.
+
+---
+
+## Phase 5 — Measure Selection
+**Date: 2026-05-10**
+
+### What was done
+Ran coverage checks in JupyterLab (testing/exploratory.ipynb) against the 10
+original candidate measures, then evaluated 5 replacement candidates for the
+measures that failed. Coverage checks examined three things for each measure:
+(1) eligible population size by age/sex criteria, (2) ICD-10 diagnosis code
+presence in 2021 claims, and (3) HCPCS/CPT procedure code presence in 2021
+claims.
+
+### Original 10 measures — results
+
+**Kept (5):**
+- COL — 4,860 eligible, 783 with colonoscopy/FOBT codes
+- AAB — 7,817 eligible, 871 with bronchitis diagnosis
+- ABA — 5,958 eligible, 453 with office visit codes
+- AMR — 3,674 eligible, 333 with asthma diagnosis
+- FUH — 8,123 eligible, 298 with mental illness diagnosis
+
+**Dropped (5):**
+- BCS — 2,071 eligible but only 7 members with mammography codes. Numerator
+  would be effectively zero. Mammography HCPCS codes are sparse in the
+  synthetic dataset.
+- PPC — 0 members with delivery codes. Delivery CPT codes completely absent.
+- URI — Only 46 members with URI diagnosis in 2021. Population too thin to
+  produce a meaningful rate.
+- CBP — 575 members with hypertension diagnosis, but measuring BP control
+  requires actual blood pressure readings. This is clinical data from the EHR,
+  not present in claims. Cannot implement the numerator.
+- CDC — 716 members with diabetes diagnosis, but HbA1c test codes (83036,
+  83037) are completely absent from carrier and outpatient across all years.
+  Lab claims are not included in this synthetic dataset.
+
+### Replacement candidates — results
+
+Five replacement candidates were evaluated. All were selected for being purely
+claims-based with no EHR or lab data requirement.
+
+**Kept (3):**
+- PCR — 3,049 inpatient index admissions in 2021, 955 readmissions within
+  30 days (31.3%). Rate is higher than the real-world average (~15%) due to
+  synthetic data characteristics, but the data is fully present and the
+  measure is implementable.
+- FUM — 205 members with mental health outpatient claims, 102 with mental
+  health carrier claims in 2021. Natural complement to FUH which we are
+  already implementing.
+- IET — 370 members with new SUD diagnosis in 2021, 238 with follow-up within
+  34 days. Strong coverage. SUD treatment initiation and engagement is a high-
+  priority area in healthcare quality.
+
+**Dropped (2):**
+- LBP — 124 members with low back pain diagnosis (M54), but 0 members with
+  lumbar imaging codes. Same pattern as BCS — the specific procedure codes
+  are absent from the synthetic dataset.
+- SAA — 0 members with schizophrenia-spectrum diagnosis (F20-F29). Codes are
+  simply not present in the synthetic data, despite the broader mental illness
+  category (F20-F99) being well represented for FUH and FUM.
+
+### Final measure set — 8 measures
+COL, AAB, ABA, AMR, FUH, PCR, FUM, IET
+
+### Decisions made
+
+**JupyterLab for exploratory queries** — All Phase 5 coverage checks were run
+in JupyterLab via the exploratory notebook rather than sqlcmd. This keeps the
+SQL visible and the results alongside the queries in one document.
+
+**Measurement year confirmed as 2021** — All coverage queries filtered to
+Jan 1 – Dec 31, 2021. Age calculated from BENE_BIRTH_DT as of Dec 31, 2021
+throughout.
+
+**Age calculation from BENE_BIRTH_DT** — All queries use
+FLOOR(DATEDIFF(day, CONVERT(date, BENE_BIRTH_DT, 106), '2021-12-31') / 365.25)
+rather than AGE_AT_END_REF_YR, which reflects the 2021 reference year of the
+beneficiary file rather than a pre-calculated field.
+
+### Notebook restructure (upcoming)
+The exploratory.ipynb file will be split into two separate notebooks:
+- testing/db_verification.ipynb — Phase 4 database verification queries
+- testing/measures.ipynb — Phase 5 measure coverage analysis, redesigned with
+  one section per measure (summary, query, conclusion) and a full list of
+  implementable claims-based measures at the top.

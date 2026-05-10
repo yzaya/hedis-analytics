@@ -249,7 +249,29 @@ $ /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -C -Q "USE hedis; TRUNCATE TA
 # Changed database context to 'hedis'.
 
 [2026-05-10 16:34] PYTHON
-$ python3 [inline load script — beneficiary_2021.csv only]
+$ python3 - << 'EOF'
+import pyodbc, pandas as pd, os
+conn_str = (
+    'DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost;'
+    'DATABASE=hedis;UID=SA;PWD=<sa_password>;TrustServerCertificate=yes;'
+)
+conn = pyodbc.connect(conn_str)
+csv_path = '/home/yzaya/Projects/hedis-analytics/data/raw/beneficiary_2021.csv'
+total_inserted = 0
+for chunk in pd.read_csv(csv_path, sep='|', dtype=str, chunksize=5000, keep_default_na=False):
+    chunk = chunk.where(chunk != '', other=None)
+    cols = list(chunk.columns)
+    sql = f"INSERT INTO beneficiary ({', '.join(cols)}) VALUES ({', '.join(['?' for _ in cols])})"
+    rows = [tuple(r) for r in chunk.itertuples(index=False, name=None)]
+    cursor = conn.cursor()
+    cursor.fast_executemany = True
+    cursor.executemany(sql, rows)
+    conn.commit()
+    total_inserted += len(rows)
+cursor.execute('SELECT COUNT(*) FROM beneficiary')
+print(f'Rows after: {cursor.fetchone()[0]}')
+conn.close()
+EOF
 # Connected.
 # Rows before: 0
 # Rows after:  8246
@@ -261,3 +283,56 @@ $ /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -C -Q "USE hedis; SELECT TOP 
 # BENE_ENROLLMT_REF_YR = 2021 confirmed
 # BENE_DEATH_DT = NULL for sampled rows
 # Row count verified: 8,246 matches CSV (8247 lines - 1 header)
+
+[2026-05-10 16:40] GIT
+$ git add COMMAND_LOG.md DEVLOG.md etl/load_cms_data.py testing/
+$ git commit -m "[ETL] Switch to 2021 beneficiary file; set measurement year to 2021; add exploratory notebook"
+$ git push
+
+---
+
+## Phase 5 — Measure Coverage Review
+**Date: 2026-05-10**
+
+[2026-05-10 17:00] JUPYTER
+# Ran Phase 5 coverage queries in testing/exploratory.ipynb
+# Query 1 — Eligible population by measure (age/sex criteria, BENE_DEATH_DT IS NULL)
+# Query 2 — ICD-10 code presence in 2021 claims (inpatient, outpatient, carrier)
+# Query 3 — HCPCS/CPT code presence in 2021 claims (carrier, outpatient)
+
+[2026-05-10 17:10] TERMINAL
+$ /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -C -Q "USE hedis; SELECT COUNT(*) FROM carrier WHERE HCPCS_CD IN ('83036','83037'); SELECT COUNT(*) FROM outpatient WHERE HCPCS_CD IN ('83036','83037');"
+# carrier:   0 rows
+# outpatient: 0 rows
+# HbA1c codes (83036, 83037) absent from both tables across all years — confirmed data gap, not a query issue
+
+[2026-05-10 17:15] DECISION
+# Dropped measures (5): BCS, PPC, URI, CBP, CDC
+# Reason: BCS/PPC/URI — insufficient code coverage in synthetic data
+#          CBP — BP control requires clinical readings not present in claims
+#          CDC — HbA1c lab codes absent from dataset entirely
+# Replacement candidates (5): PCR, LBP, SAA, FUM, IET
+# All five are purely claims-based — no EHR or lab data required
+# Coverage checks to be run in testing/exploratory.ipynb before finalizing
+
+[2026-05-10 17:20] JUPYTER
+# Added coverage check queries for 5 replacement measures to testing/exploratory.ipynb
+# PCR — Plan All-Cause Readmissions
+# LBP — Use of Imaging Studies for Low Back Pain
+# SAA — Adherence to Antipsychotic Medications
+# FUM — Follow-Up After ED Visit for Mental Illness
+# IET — Initiation and Engagement of SUD Treatment
+
+[2026-05-10 17:30] JUPYTER
+# Ran all 5 replacement measure coverage queries in testing/exploratory.ipynb
+# Results:
+# PCR: 3,049 index admissions in 2021; 955 readmissions within 30 days (31.3%) — KEEP
+# LBP: 124 members with LBP dx; 0 with lumbar imaging codes — DROP (no imaging codes in dataset)
+# SAA: 0 members with schizophrenia dx (F20-F29); 0 with PDE records — DROP (codes absent)
+# FUM: 205 members with MH outpatient dx; 102 with MH carrier dx — KEEP
+# IET: 370 members with new SUD dx; 238 with follow-up within 34 days — KEEP
+
+[2026-05-10 17:35] DECISION
+# Final measure set confirmed (pending Isaiah's sign-off on count):
+# 8 measures: COL, AAB, ABA, AMR, FUH, PCR, FUM, IET
+# LBP and SAA dropped — lumbar imaging codes and schizophrenia dx absent from synthetic dataset
