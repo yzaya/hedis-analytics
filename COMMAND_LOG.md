@@ -333,6 +333,18 @@ $ /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -C -Q "USE hedis; SELECT COUN
 # IET: 370 members with new SUD dx; 238 with follow-up within 34 days — KEEP
 
 [2026-05-10 17:35] DECISION
-# Final measure set confirmed (pending Isaiah's sign-off on count):
-# 8 measures: COL, AAB, ABA, AMR, FUH, PCR, FUM, IET
+# Current measure set (not final — evaluation ongoing):
+# 8 confirmed so far: COL, AAB, ABA, AMR, FUH, PCR, FUM, IET
 # LBP and SAA dropped — lumbar imaging codes and schizophrenia dx absent from synthetic dataset
+# Additional candidates (FUA, APM, OHD, others) still to be evaluated
+
+[2026-05-10 17:40] GIT
+$ git add .
+$ git commit -m "[DOCS] Phase 5 measure selection — coverage analysis and redesign"
+$ git push
+# 3 files changed, 1213 insertions(+), 3 deletions(-)
+
+[2026-05-10 17:50] GIT
+$ git add .
+$ git commit -m "[DOCS] Correct Phase 5 measure set status — evaluation ongoing"
+$ git push

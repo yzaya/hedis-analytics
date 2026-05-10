@@ -287,8 +287,11 @@ claims-based with no EHR or lab data requirement.
   simply not present in the synthetic data, despite the broader mental illness
   category (F20-F99) being well represented for FUH and FUM.
 
-### Final measure set — 8 measures
+### Current measure set — 8 confirmed, evaluation ongoing
 COL, AAB, ABA, AMR, FUH, PCR, FUM, IET
+
+Additional candidates (FUA, APM, OHD, and others) still to be evaluated before
+the measure list is finalized.
 
 ### Decisions made
 
