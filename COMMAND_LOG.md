@@ -140,6 +140,46 @@ $ curl -L "https://go.microsoft.com/fwlink/?linkid=2215528" -o ~/Downloads/azure
 
 ---
 
+## Phase 4 — Load Data into SQL Server
+**Date: 2026-05-10**
+
+[2026-05-10 15:30] TERMINAL
+$ export SQLCMDPASSWORD=<sa_password>
+# Set for session — clears on terminal close
+
+[2026-05-10 15:31] TERMINAL
+$ sqlcmd -S localhost -U SA -C -i /home/yzaya/Projects/hedis-analytics/schema/create_tables.sql
+# Msg 1801: Database 'hedis' already exists — expected, ignored
+# Changed database context to 'hedis'
+# All 9 tables created successfully
+
+[2026-05-10 15:32] TERMINAL
+$ sqlcmd -S localhost -U SA -C -Q "USE hedis; DROP TABLE IF EXISTS beneficiary, inpatient, outpatient, carrier, dme, hha, hospice, snf, pde;"
+# Tables dropped — schema had VARCHAR sizing errors, needed to be widened
+
+[2026-05-10 15:33] TERMINAL
+$ sqlcmd -S localhost -U SA -C -i /home/yzaya/Projects/hedis-analytics/schema/create_tables.sql
+# All 9 tables recreated with corrected column sizes
+
+[2026-05-10 15:34] TERMINAL
+$ sqlcmd -S localhost -U SA -C -Q "USE hedis; SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE';"
+# 9 tables confirmed: beneficiary, inpatient, outpatient, carrier, dme, hha, hospice, snf, pde
+
+[2026-05-10 15:35] PYTHON
+$ python3 /home/yzaya/Projects/hedis-analytics/etl/load_cms_data.py
+# beneficiary   10,000 rows
+# inpatient     58,066 rows
+# outpatient   575,092 rows
+# carrier    1,121,004 rows
+# dme          103,828 rows
+# hha            6,215 rows
+# hospice       12,107 rows
+# snf           12,548 rows
+# pde          515,520 rows
+# All files loaded successfully. Connection closed.
+
+---
+
 ## Phase 3 — Download CMS Synthetic Medicare Data
 **Date: 2026-05-10**
 

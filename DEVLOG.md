@@ -136,3 +136,55 @@ against our measure definitions.
 - pde.csv              — 87M
 - snf.csv              — 9.5M
 - Total: ~940MB unzipped
+
+### Stretch goal noted
+Docker containerization was considered — packaging SQL Server, the schema,
+and ETL into a Docker image so anyone could pull and run the full project
+without manual setup. Decided to finish the core project first and revisit
+afterward. The COMMAND_LOG has everything needed to reproduce the SQL Server
+setup from scratch if needed.
+
+---
+
+## Phase 4 — Load Data into SQL Server
+**Date: 2026-05-10**
+
+### What was done
+Created the hedis database schema and loaded all 9 CMS CSV files into
+SQL Server using the Python ETL script. Verified row counts after load.
+
+### Decisions made
+
+**VARCHAR sizing — widened after first run** — Initial schema used CHAR(1)
+for single-character codes and VARCHAR(10) for date columns. The first ETL
+run failed with "String data, right truncation" errors. Root causes identified
+from the first data row: CMS dates are in "DD-Mon-YYYY" format (11 chars,
+not 10), COUNTY_CD values can be 4 chars (not 3), and ENRL_SRC can be 3
+chars (e.g. "CME"). Fixed by changing all CHAR(1) to VARCHAR(5), all
+VARCHAR(10) to VARCHAR(15), and COUNTY_CD to VARCHAR(15). Tables were
+dropped and recreated before re-running the ETL.
+
+### Data observations
+
+**Beneficiary has exactly 10,000 rows** — The round number is almost
+certainly intentional. The CMS synthetic dataset is a controlled sample.
+This should be reviewed in Phase 5 to understand whether 10,000 beneficiaries
+provides sufficient population for all 10 candidate measures.
+
+**Row counts after load:**
+- beneficiary      10,000
+- inpatient        58,066
+- outpatient      575,092
+- carrier       1,121,004
+- dme             103,828
+- hha               6,215
+- hospice          12,107
+- snf              12,548
+- pde             515,520
+
+### State at end of phase
+- hedis database created in SQL Server
+- All 9 tables created per schema/create_tables.sql
+- All CMS CSV files loaded via etl/load_cms_data.py
+- Row counts verified post-load
+- Schema corrected for CMS date format and county code length
