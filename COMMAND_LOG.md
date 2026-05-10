@@ -140,46 +140,6 @@ $ curl -L "https://go.microsoft.com/fwlink/?linkid=2215528" -o ~/Downloads/azure
 
 ---
 
-## Phase 4 — Load Data into SQL Server
-**Date: 2026-05-10**
-
-[2026-05-10 15:30] TERMINAL
-$ export SQLCMDPASSWORD=<sa_password>
-# Set for session — clears on terminal close
-
-[2026-05-10 15:31] TERMINAL
-$ sqlcmd -S localhost -U SA -C -i /home/yzaya/Projects/hedis-analytics/schema/create_tables.sql
-# Msg 1801: Database 'hedis' already exists — expected, ignored
-# Changed database context to 'hedis'
-# All 9 tables created successfully
-
-[2026-05-10 15:32] TERMINAL
-$ sqlcmd -S localhost -U SA -C -Q "USE hedis; DROP TABLE IF EXISTS beneficiary, inpatient, outpatient, carrier, dme, hha, hospice, snf, pde;"
-# Tables dropped — schema had VARCHAR sizing errors, needed to be widened
-
-[2026-05-10 15:33] TERMINAL
-$ sqlcmd -S localhost -U SA -C -i /home/yzaya/Projects/hedis-analytics/schema/create_tables.sql
-# All 9 tables recreated with corrected column sizes
-
-[2026-05-10 15:34] TERMINAL
-$ sqlcmd -S localhost -U SA -C -Q "USE hedis; SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE';"
-# 9 tables confirmed: beneficiary, inpatient, outpatient, carrier, dme, hha, hospice, snf, pde
-
-[2026-05-10 15:35] PYTHON
-$ python3 /home/yzaya/Projects/hedis-analytics/etl/load_cms_data.py
-# beneficiary   10,000 rows
-# inpatient     58,066 rows
-# outpatient   575,092 rows
-# carrier    1,121,004 rows
-# dme          103,828 rows
-# hha            6,215 rows
-# hospice       12,107 rows
-# snf           12,548 rows
-# pde          515,520 rows
-# All files loaded successfully. Connection closed.
-
----
-
 ## Phase 3 — Download CMS Synthetic Medicare Data
 **Date: 2026-05-10**
 
@@ -211,4 +171,93 @@ $ ls -lh ~/Projects/hedis-analytics/data/raw/
 # outpatient.csv        321M
 # pde.csv                87M
 # snf.csv               9.5M
-# Total: ~940MB
+# Total: ~942MB
+
+---
+
+## Phase 4 — Load Data into SQL Server
+**Date: 2026-05-10**
+
+[2026-05-10 15:30] TERMINAL
+$ export SQLCMDPASSWORD=<sa_password>
+# Set for session — clears on terminal close
+
+[2026-05-10 15:31] TERMINAL
+$ sqlcmd -S localhost -U SA -C -i /home/yzaya/Projects/hedis-analytics/schema/create_tables.sql
+# Changed database context to 'hedis'
+# All 9 tables created successfully
+
+[2026-05-10 15:32] TERMINAL
+$ sqlcmd -S localhost -U SA -C -Q "USE hedis; DROP TABLE IF EXISTS beneficiary, inpatient, outpatient, carrier, dme, hha, hospice, snf, pde;"
+# Tables dropped — schema had VARCHAR sizing errors, needed to be widened
+
+[2026-05-10 15:33] TERMINAL
+$ sqlcmd -S localhost -U SA -C -i /home/yzaya/Projects/hedis-analytics/schema/create_tables.sql
+# Msg 1801: Database 'hedis' already exists — expected, ignored
+# All 9 tables recreated with corrected column sizes
+
+[2026-05-10 15:34] TERMINAL
+$ sqlcmd -S localhost -U SA -C -Q "USE hedis; SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE';"
+# 9 tables confirmed: beneficiary, inpatient, outpatient, carrier, dme, hha, hospice, snf, pde
+
+[2026-05-10 15:35] PYTHON
+$ python3 /home/yzaya/Projects/hedis-analytics/etl/load_cms_data.py
+# beneficiary   10,000 rows
+# inpatient     58,066 rows
+# outpatient   575,092 rows
+# carrier    1,121,004 rows
+# dme          103,828 rows
+# hha            6,215 rows
+# hospice       12,107 rows
+# snf           12,548 rows
+# pde          515,520 rows
+# All files loaded successfully. Connection closed.
+
+[2026-05-10 16:00] TERMINAL
+$ wc -l /home/yzaya/Projects/hedis-analytics/data/raw/*.csv
+#     10001 beneficiary_2025.csv
+#   1121005 carrier.csv
+#    103829 dme.csv
+#      6216 hha.csv
+#     12108 hospice.csv
+#     58067 inpatient.csv
+#    575093 outpatient.csv
+#    515521 pde.csv
+#     12549 snf.csv
+#   2414389 total
+# All row counts match ETL output exactly (lines - 1 header = rows loaded)
+
+---
+
+## Phase 5 Prep — Switch to 2021 Beneficiary File
+**Date: 2026-05-10**
+
+[2026-05-10 16:30] BROWSER
+# Downloaded beneficiary_2021.csv from CMS synthetic Medicare data portal
+# Saved to ~/Downloads/
+
+[2026-05-10 16:31] TERMINAL
+$ mv ~/Downloads/beneficiary_2021.csv /home/yzaya/Projects/hedis-analytics/data/raw/
+
+[2026-05-10 16:32] TERMINAL
+$ wc -l /home/yzaya/Projects/hedis-analytics/data/raw/beneficiary_2021.csv
+#  8247 beneficiary_2021.csv
+# 8247 lines - 1 header = 8,246 rows
+
+[2026-05-10 16:33] TERMINAL
+$ /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -C -Q "USE hedis; TRUNCATE TABLE beneficiary;"
+# Changed database context to 'hedis'.
+
+[2026-05-10 16:34] PYTHON
+$ python3 [inline load script — beneficiary_2021.csv only]
+# Connected.
+# Rows before: 0
+# Rows after:  8246
+# Inserted:    8246
+# Done.
+
+[2026-05-10 16:35] TERMINAL
+$ /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -C -Q "USE hedis; SELECT TOP 3 BENE_ID, BENE_BIRTH_DT, BENE_ENROLLMT_REF_YR, BENE_DEATH_DT FROM beneficiary;"
+# BENE_ENROLLMT_REF_YR = 2021 confirmed
+# BENE_DEATH_DT = NULL for sampled rows
+# Row count verified: 8,246 matches CSV (8247 lines - 1 header)

@@ -14,7 +14,7 @@ DATA_DIR = '/home/yzaya/Projects/hedis-analytics/data/raw'
 CHUNK_SIZE = 5000
 
 FILES = [
-    ('beneficiary_2025.csv', 'beneficiary'),
+    ('beneficiary_2021.csv', 'beneficiary'),
     ('inpatient.csv',        'inpatient'),
     ('outpatient.csv',       'outpatient'),
     ('carrier.csv',          'carrier'),

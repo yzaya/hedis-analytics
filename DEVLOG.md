@@ -188,3 +188,40 @@ provides sufficient population for all 10 candidate measures.
 - All CMS CSV files loaded via etl/load_cms_data.py
 - Row counts verified post-load
 - Schema corrected for CMS date format and county code length
+
+---
+
+## Phase 5 Prep — Beneficiary File and Measurement Year Decision
+**Date: 2026-05-10**
+
+### What was done
+After running exploratory queries in JupyterLab, the claims date range was
+confirmed: all FFS tables span 01-Apr-2015 through 31-Oct-2022. The
+beneficiary file was labeled 2025. This created a mismatch with the planned
+measurement year of 2025.
+
+Decision: change the measurement year to 2021. It is the most recent full
+calendar year (Jan 1 – Dec 31) fully contained within the claims data window.
+
+### Beneficiary file decision
+The 2025 beneficiary file was replaced with the 2021 file. Reasons:
+
+1. **BENE_DEATH_DT** — the 2025 file records deaths through 2025. Anyone who
+   died between 2022 and 2025 would be incorrectly excluded from a 2021
+   measurement year denominator. The 2021 file only records deaths through
+   2021, which is correct for our measurement period.
+
+2. **Enrollment status** — the 2021 file reflects who was enrolled in Medicare
+   in 2021, which is the correct denominator population.
+
+3. **Age** — AGE_AT_END_REF_YR is irrelevant regardless of which file is used.
+   All measure queries will calculate age directly from BENE_BIRTH_DT.
+
+### Data note
+The 2021 beneficiary file has 8,246 rows vs 10,000 in the 2025 file. This is
+expected — the enrolled population varies by year. The 2021 cohort is the
+correct denominator for 2021 HEDIS measures.
+
+### ETL update
+etl/load_cms_data.py updated: beneficiary_2025.csv → beneficiary_2021.csv.
+Beneficiary table truncated and reloaded. Row count verified: 8,246.
