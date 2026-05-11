@@ -308,9 +308,52 @@ FLOOR(DATEDIFF(day, CONVERT(date, BENE_BIRTH_DT, 106), '2021-12-31') / 365.25)
 rather than AGE_AT_END_REF_YR, which reflects the 2021 reference year of the
 beneficiary file rather than a pre-calculated field.
 
-### Notebook restructure (upcoming)
-The exploratory.ipynb file will be split into two separate notebooks:
-- testing/db_verification.ipynb — Phase 4 database verification queries
-- testing/measures.ipynb — Phase 5 measure coverage analysis, redesigned with
-  one section per measure (summary, query, conclusion) and a full list of
-  implementable claims-based measures at the top.
+### Notebook restructure (completed)
+exploratory.ipynb was split into two purpose-specific notebooks. The original
+file was left in place as a backup.
+
+- testing/db_verification.ipynb — Phase 4 database verification queries:
+  connection, row counts with expected values, beneficiary sample, age/sex
+  distribution, claims date range check, inpatient dx codes, carrier HCPCS,
+  PDE records.
+- testing/measures.ipynb — Phase 5 measure coverage analysis: one section per
+  measure (summary, coverage query, conclusion with numbers), preceded by a
+  full landscape table of 18 implementable claims-based HEDIS measures.
+
+### CBP correction
+CBP (Controlling High Blood Pressure) was initially included in the claims-based
+measures landscape table in measures.ipynb. It was removed after review.
+
+Reason: the CBP numerator requires an actual blood pressure reading (< 140/90
+mmHg). BP values are clinical data recorded in the EHR — they are not present
+in claims. CBP cannot be implemented from claims data alone and does not belong
+in a claims-only measures list. The CBP section and all associated cells were
+deleted from measures.ipynb. The section remains in exploratory.ipynb (backup)
+for reference.
+
+### Conclusion corrections
+All 14 conclusion cells in measures.ipynb had incorrect numbers. The conclusions
+were written before the queries were actually run, using estimates carried over
+from earlier exploratory work. The query outputs were correct throughout — the
+conclusions simply did not reflect them.
+
+Corrected numbers:
+
+| Measure | Wrong | Correct |
+|---|---|---|
+| COL | 783 with screening codes | 724 |
+| BCS | 7 with mammography codes | 2 |
+| CDC | 716 with diabetes dx | 423 (age-eligible: 6,138) |
+| AAB | 871 with bronchitis dx | 795 |
+| AMR | 333 with asthma dx | 220 (157 with PDE) |
+| FUH | 298 MH discharges | 19 (9 with 7-day follow-up) |
+| URI | 46 with URI dx | 40 |
+| ABA | 453 with office visit codes | 341 |
+
+All conclusion cells and both summary tables updated to match query outputs.
+
+### Alphabetical ordering
+All measure content in measures.ipynb was sorted alphabetically by abbreviation:
+landscape table, evaluated list, individual measure sections, and both summary
+tables (confirmed and dropped). A stray section divider left over from the
+original "Replacement Measure Candidates" header was also removed.

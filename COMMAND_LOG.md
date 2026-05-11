@@ -348,3 +348,32 @@ $ git push
 $ git add .
 $ git commit -m "[DOCS] Correct Phase 5 measure set status — evaluation ongoing"
 $ git push
+
+---
+
+## Phase 5 — Notebook Restructure
+**Date: 2026-05-10**
+
+[2026-05-10 18:00] JUPYTER
+# Created testing/db_verification.ipynb (new file)
+# Purpose: Phase 4 database verification — run after any ETL reload
+# Cells: connection, row counts (all 9 tables with expected counts), beneficiary sample rows,
+#        age/sex distribution (BENE_BIRTH_DT-based calculation), claims date range check,
+#        inpatient sample diagnosis codes, carrier sample HCPCS codes, PDE sample drug records
+# Key difference from exploratory.ipynb: age uses BENE_BIRTH_DT calc, not AGE_AT_END_REF_YR
+
+[2026-05-10 18:01] JUPYTER
+# Created testing/measures.ipynb (new file)
+# Purpose: Phase 5 measure coverage analysis — one section per measure
+# Structure:
+#   1. Header: measurement year 2021, 8,246-member population, purpose
+#   2. Connection cell (identical to db_verification.ipynb)
+#   3. Full landscape table of 19 implementable claims-based HEDIS measures
+#      with [NCQA HEDIS Measures — ncqa.org] placeholder (URL to be confirmed)
+#   4. 15 individual measure sections (10 original + 5 replacement candidates):
+#      - Markdown: what it is, what it measures, why it matters, data required, key codes
+#      - Code: individual per-measure coverage check query
+#      - Markdown: conclusion with actual numbers and KEEP / DROP decision
+#   5. Summary table at bottom — evaluation ongoing
+# Measures in order: COL, BCS, CBP, CDC, AAB, AMR, FUH, URI, PPC, ABA, PCR, LBP, SAA, FUM, IET
+# testing/exploratory.ipynb left in place untouched as backup
