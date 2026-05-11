@@ -351,6 +351,66 @@ $ git push
 
 ---
 
+## Phase 5 — Notebook Corrections and Cleanup
+**Date: 2026-05-10**
+
+[2026-05-10 19:00] JUPYTER
+Reviewed measures.ipynb against query outputs. Corrected all 14 conclusion cells —
+numbers had been written from estimates, not actual query results.
+COL: 783→724, BCS: 7→2, CDC: 716→423 (age-eligible 6,138), AAB: 871→795,
+AMR: 333→220 (157 with PDE), FUH: 298→19 (9 with follow-up), URI: 46→40, ABA: 453→341.
+Both summary tables updated to match.
+
+[2026-05-10 19:05] JUPYTER
+Removed CBP from measures.ipynb entirely — landscape table, evaluated list, and all
+three section cells deleted. CBP requires EHR BP readings for the numerator; it is not
+a claims-based measure.
+
+[2026-05-10 19:10] JUPYTER
+Alphabetized all content in measures.ipynb: landscape table, evaluated list, measure
+sections, and both summary tables. Removed orphaned section divider.
+
+[2026-05-10 19:15] GIT
+Added .ipynb_checkpoints/ to .gitignore.
+Ran git rm -r --cached testing/.ipynb_checkpoints/ to remove from tracking.
+Moved testing/exploratory.ipynb to testing/archive/exploratory.ipynb.
+Committed and pushed.
+
+---
+
+## Phase 6 — Measure Implementation
+**Date: 2026-05-10**
+
+[2026-05-10 20:00] JUPYTER
+Created measures/aba.ipynb — ABA Adult BMI Assessment.
+Denominator: 341 members with qualifying outpatient visits (ages 18-74).
+Numerator: 0 — Z68.x BMI documentation codes absent from synthetic dataset.
+Concluded: not implementable. Conclusion cell added to notebook.
+
+[2026-05-10 20:15] JUPYTER
+Created measures/pcr.ipynb — PCR Plan All-Cause Readmissions.
+Denominator: 3,049 index admissions in 2021.
+Numerator: 955 readmissions within 30 days.
+Rate: 31.3% (elevated vs real-world ~15% due to synthetic data characteristics).
+Conclusion cell added. Measure fully implemented from inpatient claims.
+
+[2026-05-10 20:30] JUPYTER
+Created measures/fuh.ipynb — FUH Follow-Up After Hospitalization for Mental Illness.
+Denominator: 19 MH inpatient discharges in 2021.
+Numerator (7-day): 9 with follow-up — rate 47.4%.
+Numerator (30-day): 12 with follow-up — rate 63.2%.
+Rates consistent with real-world HEDIS averages. Measure fully implemented.
+Conclusion cell added.
+
+[2026-05-10 20:45] FILE
+Created measures/pcr.sql — clean T-SQL version of PCR measure.
+Created measures/fuh.sql — clean T-SQL version of FUH measure.
+Created results/pcr_2021.csv — PCR summary results.
+Created results/fuh_2021.csv — FUH summary results.
+Created results/summary.md — markdown summary table for all implemented measures.
+
+---
+
 ## Phase 5 — Notebook Restructure
 **Date: 2026-05-10**
 

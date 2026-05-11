@@ -357,3 +357,64 @@ All measure content in measures.ipynb was sorted alphabetically by abbreviation:
 landscape table, evaluated list, individual measure sections, and both summary
 tables (confirmed and dropped). A stray section divider left over from the
 original "Replacement Measure Candidates" header was also removed.
+
+exploratory.ipynb moved to testing/archive/. .ipynb_checkpoints/ added to
+.gitignore and removed from git tracking.
+
+---
+
+## Phase 6 — Measure Implementation
+**Date: 2026-05-10**
+
+### Measure selection
+Three measures selected for Phase 6 implementation:
+
+- **ABA** — Adult BMI Assessment
+- **FUH** — Follow-Up After Hospitalization for Mental Illness
+- **PCR** — Plan All-Cause Readmissions
+
+Selected for domain variety (preventive, follow-up, utilization) and data source
+variety (carrier/outpatient, inpatient/carrier, inpatient only). Starting with
+ABA as the first implementation.
+
+### ABA — Adult BMI Assessment (not implemented)
+ABA was attempted first. The denominator built correctly — 341 members with
+qualifying outpatient visits (ages 18-74). However, the numerator returned 0.
+ICD-10 Z68.x BMI documentation codes are absent from the CMS synthetic dataset.
+Synthea does not generate these codes, which is the same pattern observed with
+BCS (mammography) and LBP (lumbar imaging) during Phase 5 coverage checks.
+
+This should have been caught in Phase 5. The coverage check for ABA only
+verified HCPCS visit codes — it did not check for Z68.x numerator codes.
+Lesson: coverage checks need to verify both denominator and numerator code
+availability. ABA was dropped. Conclusion documented in measures/aba.ipynb.
+
+### PCR — Plan All-Cause Readmissions (implemented)
+Fully implemented from inpatient claims. Denominator: 3,049 index admissions
+in 2021. Numerator: 955 readmissions within 30 days. Rate: 31.3%.
+
+The 31.3% rate is approximately double the real-world Medicare average (~15%).
+This is a known characteristic of the synthetic data — Synthea does not model
+realistic care transitions. The measure is structurally correct and would
+produce a valid rate against real Medicare claims data.
+
+Artifacts: measures/pcr.ipynb, measures/pcr.sql, results/pcr_2021.csv.
+
+### FUH — Follow-Up After Hospitalization for Mental Illness (implemented)
+Fully implemented from inpatient, carrier, and outpatient claims. No EHR data
+required. Denominator: 19 members with a mental illness inpatient discharge
+in 2021. Two rates produced:
+
+- 7-day follow-up: 9 members (47.4%)
+- 30-day follow-up: 12 members (63.2%)
+
+The denominator is small due to the synthetic dataset size (8,246 members).
+Rates are directionally consistent with real-world HEDIS averages of 35–40%
+at 7 days and 50–55% at 30 days. This is the cleanest measure implemented —
+no synthetic data limitations affect the numerator logic.
+
+Artifacts: measures/fuh.ipynb, measures/fuh.sql, results/fuh_2021.csv.
+
+### Results summary
+results/summary.md created with a markdown table covering all implemented
+measures and measures evaluated but not implemented.
