@@ -405,9 +405,24 @@ Conclusion cell added.
 [2026-05-10 20:45] FILE
 Created measures/pcr.sql — clean T-SQL version of PCR measure.
 Created measures/fuh.sql — clean T-SQL version of FUH measure.
-Created results/pcr_2021.csv — PCR summary results.
-Created results/fuh_2021.csv — FUH summary results.
 Created results/summary.md — markdown summary table for all implemented measures.
+
+[2026-05-10 21:00] FILE
+Updated measures/pcr.sql — changed output from aggregate rate to member-level.
+One row per index admission with readmitted_30_day binary flag.
+Updated measures/fuh.sql — changed output from aggregate rate to member-level.
+One row per MH discharge with followup_7_day and followup_30_day binary flags.
+
+[2026-05-10 21:05] JUPYTER
+Added export section to measures/pcr.ipynb — member-level query + to_csv call.
+Added export section to measures/fuh.ipynb — member-level query + to_csv call.
+Output paths: results/pcr_2021.csv, results/fuh_2021.csv.
+
+[2026-05-10 21:10] JUPYTER
+Ran export cell in measures/pcr.ipynb.
+3,049 rows written to results/pcr_2021.csv.
+Ran export cell in measures/fuh.ipynb.
+19 rows written to results/fuh_2021.csv.
 
 ---
 

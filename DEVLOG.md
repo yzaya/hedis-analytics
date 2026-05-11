@@ -287,11 +287,11 @@ claims-based with no EHR or lab data requirement.
   simply not present in the synthetic data, despite the broader mental illness
   category (F20-F99) being well represented for FUH and FUM.
 
-### Current measure set — 8 confirmed, evaluation ongoing
-COL, AAB, ABA, AMR, FUH, PCR, FUM, IET
+### Current measure set — 7 confirmed
+COL, AAB, AMR, FUH, PCR, FUM, IET
 
-Additional candidates (FUA, APM, OHD, and others) still to be evaluated before
-the measure list is finalized.
+ABA was later attempted in Phase 6 and dropped — Z68.x BMI documentation codes
+are absent from the synthetic dataset. See Phase 6 for details.
 
 ### Decisions made
 
@@ -398,7 +398,7 @@ This is a known characteristic of the synthetic data — Synthea does not model
 realistic care transitions. The measure is structurally correct and would
 produce a valid rate against real Medicare claims data.
 
-Artifacts: measures/pcr.ipynb, measures/pcr.sql, results/pcr_2021.csv.
+Artifacts: measures/pcr.ipynb, measures/pcr.sql.
 
 ### FUH — Follow-Up After Hospitalization for Mental Illness (implemented)
 Fully implemented from inpatient, carrier, and outpatient claims. No EHR data
@@ -413,7 +413,19 @@ Rates are directionally consistent with real-world HEDIS averages of 35–40%
 at 7 days and 50–55% at 30 days. This is the cleanest measure implemented —
 no synthetic data limitations affect the numerator logic.
 
-Artifacts: measures/fuh.ipynb, measures/fuh.sql, results/fuh_2021.csv.
+Artifacts: measures/fuh.ipynb, measures/fuh.sql.
+
+### Member-level output and standalone SQL files
+Both PCR and FUH produce member-level results — one row per index admission
+(PCR) or MH discharge (FUH) with binary numerator flags. This format was
+chosen over aggregate summaries because it supports downstream analysis and
+demonstrates the measure at the member level, which is how health plans
+actually use HEDIS data.
+
+The standalone .sql files match the member-level output and can be run
+directly via sqlcmd with no Python dependency. The notebooks include export
+cells that write results to results/pcr_2021.csv and results/fuh_2021.csv
+when run against the database.
 
 ### Results summary
 results/summary.md created with a markdown table covering all implemented
