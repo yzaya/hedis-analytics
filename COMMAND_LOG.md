@@ -589,3 +589,12 @@ Rebuilt web/hedis.html — revised framing (learning exercise + AI collaboration
 updated measures table with actual results, PCR SQL walkthrough, FUH results table,
 and "Where Claims Run Out" section covering FUM, ABA, and NDC gaps.
 Pending deployment.
+
+[2026-05-12] GIT
+$ git commit -m "build webpages"
+[main 7a464f1] build webpages
+ 4 files changed, 12026 insertions(+), 20 deletions(-)
+ create mode 100644 web/hedis-measures.html
+ create mode 100644 web/hedis.html
+$ git push
+7a464f1 pushed to github.com:yzaya/hedis-analytics.git

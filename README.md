@@ -1,6 +1,8 @@
 # HEDIS Analytics — Claims-Based Measure Implementation
 
-A working implementation of HEDIS quality measures against CMS Synthetic
+**Project page:** https://zk-praxis.xyz/hedis.html
+
+A working implementation of HEDIS quality measures using CMS Synthetic
 Medicare claims data, built on Microsoft SQL Server.
 
 The project takes raw CMS Fee-for-Service and Part D Event files,
@@ -23,7 +25,7 @@ for a set of claims-based HEDIS 2024 measures for measurement year 2021.
 ## Why this project
 
 The CMS synthetic dataset mirrors real Medicare claims exactly in structure
-and column naming. Implementing HEDIS measures against this dataset
+and column naming. Implementing HEDIS measures with this dataset
 demonstrates the same data engineering and SQL work that a health plan
 analytics team does day to day:
 
@@ -63,7 +65,6 @@ hedis-analytics/
 │   ├── db_verification.ipynb     Phase 4 — post-load data verification
 │   ├── measures.ipynb            Phase 5 — measure coverage analysis
 │   └── archive/                  Earlier exploratory notebooks
-├── docs/                         Reference material
 ├── DEVLOG.md                     Narrative log of decisions and trade-offs
 └── COMMAND_LOG.md                Every command run, timestamped
 ```
@@ -138,18 +139,6 @@ High-level steps:
   NDC value sets that are not bundled with the synthetic data. Those queries
   use documented placeholders and explicitly call out the limitation in both
   the SQL header and notebook conclusion.
-
----
-
-## Phased roadmap
-
-This project is Phase 1. Subsequent phases reflect how real health plans
-expand HEDIS coverage:
-
-- **Phase 2:** Pharmacy-intensive measures with validated NDC code mapping
-  (replaces placeholder lists in AAB and AMR with the official NCQA sets)
-- **Phase 3:** ECDS measures and CAHPS survey-based measures as additional
-  data sources are integrated
 
 ---
 
