@@ -10,7 +10,7 @@ import getpass
 # ============================================================
 # Configuration
 # ============================================================
-DATA_DIR = '/home/yzaya/Projects/hedis-analytics/data/raw'
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'raw')
 CHUNK_SIZE = 5000
 
 FILES = [
