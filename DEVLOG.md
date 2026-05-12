@@ -430,3 +430,108 @@ when run against the database.
 ### Results summary
 results/summary.md created with a markdown table covering all implemented
 measures and measures evaluated but not implemented.
+
+---
+
+## Phase 6 — Remaining Measure SQL (2026-05-11)
+
+### What was done
+Added SQL implementations for the five measures that passed Phase 5 coverage
+but had not yet been built: COL, AAB, AMR, FUM, IET. Each measure now has a
+standalone `.sql` file in `measures/` and a matching `.ipynb` with connection
+cell, step-by-step query cells, conclusion, and export cell that writes
+member-level CSV results to `results/`.
+
+### Per-measure notes
+
+**COL — Colorectal Cancer Screening**
+Cleanest of the new five. HCPCS-based numerator (45378/45380/45385 for
+colonoscopy, G0328/82270/82274 for FOBT/FIT) with a 2-year look-back window
+(2020-2021). The Phase 5 single-year coverage check showed 724 members
+screened in 2021 alone; the production query uses the 2-year window and
+should produce a higher numerator.
+
+**FUM — Follow-Up After ED Visit for Mental Illness**
+Companion to FUH. ED visits identified via outpatient revenue center codes
+0450-0459 and 0981 with a principal F20-F99 diagnosis. Excludes ED visits
+that lead to an inpatient admission within 1 day (those cases roll up to
+FUH). 7-day and 30-day follow-up numerators using the same UNION ALL pool
+of carrier + outpatient claims as FUH.
+
+**IET — Initiation and Engagement of SUD Treatment**
+Two-part measure. Denominator is new SUD episodes in 2021 (first F10-F19
+diagnosis with no SUD claim in the prior 60 days). Initiation = any
+treatment within 14 days. Engagement = 2+ additional treatment events within
+34 days after initiation. Treatment is identified two ways: (1) a list of
+HCPCS codes commonly used for SUD services (H0001-H0050 series, 90791-90792,
+90832-90838, 99408-99409, G0396/G0397, 90853); (2) any subsequent claim with
+an F10-F19 diagnosis. Either pathway qualifies.
+
+**AAB — Avoidance of Antibiotics for Acute Bronchitis**
+Structural implementation with a documented NDC limitation. The HEDIS spec
+uses NCQA's antibiotic NDC value set, which is not bundled with the CMS
+synthetic data. The query uses a placeholder list of common antibiotic
+labeler prefixes (Teva, Sandoz, Major Pharmaceuticals, Pliva, Hikma,
+Aurobindo). The SQL header and notebook conclusion explicitly call out the
+substitution point.
+
+**AMR — Asthma Medication Ratio**
+Same NDC mapping limitation as AAB. The ratio formula
+`controller / (controller + reliever)` is implemented end to end; the
+placeholder NDC lists cover common manufacturers of fluticasone, budesonide,
+beclomethasone, mometasone (controllers) and albuterol, levalbuterol
+(relievers). Replaceable with the NCQA value set in production.
+
+### Decisions made
+
+**Honest about NDC limitations** — Two options were considered for AAB and
+AMR: drop them on grounds that the synthetic data lacks the required NDC
+reference, or implement the structural logic with placeholder NDC lists and
+document the substitution. The second was chosen because dropping
+medication-management measures entirely from a HEDIS demo project would
+under-represent a critical measure class. The placeholder approach
+demonstrates correct SQL and honest documentation of the data boundary.
+
+**Two-year look-back for COL only** — COL is the only measure in this batch
+that uses a multi-year look-back. The Phase 5 coverage queries (which are
+exploratory) all filtered to 2021 only, but the production COL query uses
+2020-2021 because the HEDIS spec permits the 1-year prior look-back.
+
+### Documentation
+
+- `results/summary.md` updated to cover all 7 measures and the 8 dropped
+  measures with reasons.
+- `README.md` written from scratch as the polished GitHub landing page.
+
+---
+
+## Phase 7 / Phase 8 — Website Page (2026-05-11)
+
+### What was done
+Built `web/hedis.html` as a single-file dark-mode project page matching the
+existing zk-praxis aesthetic (see `waves.html` for the template). The page
+walks through the premise, stack, schema, measure-selection logic, and
+implementations of PCR and FUH with embedded SQL code blocks and result
+tables.
+
+### Decisions made
+
+**Page lives in this repo, not zk-praxis** — The file is written to
+`web/hedis.html` inside this project so the HEDIS work stays contained.
+Deployment to the zk-praxis droplet is a separate manual step (scp).
+
+**Dark mode to match waves.html** — The index.html on zk-praxis uses a light
+landing-page style, but the actual project pages (waves.html, neiss.html) use
+the dark project-page template. The HEDIS page follows that pattern.
+
+**Self-contained styling** — All CSS is inline in the HTML file. No external
+dependencies, no JavaScript, no analytics call (the existing site loads
+`/analytics/tracker.js`; that can be added on deploy if desired).
+
+**Selective code excerpts** — The page shows the full PCR SQL and a partial
+FUH excerpt rather than every measure's complete query. Readers who want the
+rest can follow the GitHub link. This keeps the page focused on narrative
+over code dump.
+
+`web/hedis.html` subsequently moved to `archive/` on 2026-05-12 — page to be
+rebuilt with updated results before deployment.
