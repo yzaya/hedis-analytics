@@ -501,26 +501,6 @@ notes, and phased roadmap.
 
 ---
 
-## Phase 7/8 — Website Page
-**Date: 2026-05-11**
-
-[2026-05-11] FILE
-Created web/hedis.html — single-file dark-mode project page matching the
-existing zk-praxis project template (waves.html). Inline CSS, no JS, no
-external dependencies. Sections: hero, premise, stack, schema, measure
-selection landscape, PCR walkthrough with SQL + results, FUH walkthrough
-with SQL + results, summary of remaining measures, honesty about data
-limitations, phased roadmap, GitHub link.
-
-Note: file is in /home/yzaya/Projects/hedis-analytics/web/ — not deployed.
-Manual scp to zk-praxis droplet is a separate step.
-
-[2026-05-12] FILE
-Moved web/hedis.html to archive/hedis.html — pending redesign.
-web/ directory is now empty. archive/ added to .gitignore.
-
----
-
 ## Phase 6 — Measures Combined Notebook and Results
 **Date: 2026-05-12**
 
@@ -555,7 +535,57 @@ Removed reference from README.md.
 Updated README.md: repo tree, measures table with actual results,
 design notes, reproduce steps.
 
+---
+
+## Phase 7/8 — Website Page
+**Date: 2026-05-11**
+
+[2026-05-11] FILE
+Created web/hedis.html — single-file dark-mode project page matching the
+existing zk-praxis project template (waves.html). Inline CSS, no JS, no
+external dependencies. Sections: hero, premise, stack, schema, measure
+selection landscape, PCR walkthrough with SQL + results, FUH walkthrough
+with SQL + results, summary of remaining measures, honesty about data
+limitations, phased roadmap, GitHub link.
+
+Note: file is in /home/yzaya/Projects/hedis-analytics/web/ — not deployed.
+Manual scp to zk-praxis droplet is a separate step.
+
+[2026-05-12] FILE
+Moved web/hedis.html to archive/hedis.html — pending redesign.
+web/ directory is now empty. archive/ added to .gitignore.
+
+[2026-05-12] FILE
+Created plan/ directory for private working files (CONTEXT.md, archive/).
+Added /plan to .gitignore. Removed standalone archive/ from root.
+Deleted docs/ — no content, redundant with measures/measures.ipynb.
+
+[2026-05-12] GIT
+$ git add .
+$ git commit -m "[DOCS] Add combined measures notebook, update README, clean up repo structure"
+[main 86539d8] 19 files changed, 10429 insertions(+), 1774 deletions(-)
+Created: README.md, measures/aab.sql, measures/amr.sql, measures/col.sql,
+         measures/fum.sql, measures/iet.sql, measures/measures.ipynb,
+         results/aab_2021.csv, results/amr_2021.csv, results/col_2021.csv,
+         results/fum_2021.csv, results/iet_2021.csv
+Deleted: measures/aba.ipynb, measures/fuh.ipynb, measures/pcr.ipynb,
+         results/summary.md
+$ git push origin main
+86539d8 pushed to github.com:yzaya/hedis-analytics.git
+
 [2026-05-12] FILE
 Added archive/ to .gitignore.
 Added CONTEXT-original.md to .gitignore.
 Created archive/CONTEXT-original.md — backup of original CONTEXT.md.
+
+
+[2026-05-12] TERMINAL
+$ cd measures/
+$ python3 -m jupyter nbconvert --to html measures.ipynb --output ../web/measures.html
+Generated web/measures.html — full notebook export with all cells and outputs.
+
+[2026-05-12] FILE
+Rebuilt web/hedis.html — revised framing (learning exercise + AI collaboration),
+updated measures table with actual results, PCR SQL walkthrough, FUH results table,
+and "Where Claims Run Out" section covering FUM, ABA, and NDC gaps.
+Pending deployment.

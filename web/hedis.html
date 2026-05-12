@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inside HEDIS: A Claims-Based Implementation from Scratch</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0e1a;
+    --bg-raised: #0d1220;
+    --bg-code: #111827;
+    --border: #1e2a3a;
+    --text: #c8d6e5;
+    --text-muted: #667788;
+    --text-heading: #e0e8f0;
+    --accent: #2196F3;
+    --accent-dim: rgba(33,150,243,0.15);
+    --green: #00e676;
+    --yellow: #ffcb6b;
+    --max-w: 820px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+    font-size: 17px;
+  }
+
+  .hero {
+    text-align: center;
+    padding: 80px 24px 48px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    line-height: 1.25;
+    max-width: 720px;
+    margin: 0 auto 16px;
+  }
+
+  .hero .lead {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    max-width: 600px;
+    margin: 0 auto 24px;
+  }
+
+  .hero .meta {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  .hero .meta a {
+    color: var(--text-muted);
+    border-bottom: 1px dotted var(--text-muted);
+    text-decoration: none;
+  }
+
+  .hero .meta a:hover { color: var(--accent); border-color: var(--accent); }
+
+  article {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+
+  h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    margin: 56px 0 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  h2:first-of-type { border-top: none; margin-top: 0; }
+
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-heading);
+    margin: 36px 0 12px;
+  }
+
+  p { margin: 0 0 18px; }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  strong { color: var(--text-heading); }
+
+  ul, ol { margin: 0 0 18px 24px; }
+  li { margin-bottom: 6px; }
+
+  ul.clean { list-style: none; margin-left: 0; }
+  ul.clean li::before {
+    content: "—";
+    color: var(--text-muted);
+    margin-right: 8px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0 24px;
+    font-size: 0.95rem;
+  }
+
+  th, td {
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", "Menlo", monospace;
+    font-size: 0.88em;
+    background: var(--bg-code);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin: 20px 0 24px;
+    line-height: 1.55;
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+    font-size: 0.85rem;
+  }
+
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .st { color: #c3e88d; }
+  .cm { color: #546e7a; font-style: italic; }
+  .nb { color: #ffcb6b; }
+  .nu { color: #f78c6c; }
+
+  .callout {
+    background: var(--accent-dim);
+    border-left: 3px solid var(--accent);
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 24px 0;
+    font-size: 0.95rem;
+  }
+
+  .status-good { color: var(--green); }
+  .status-warn { color: var(--yellow); }
+  .status-drop { color: var(--text-muted); }
+
+  .cta {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 12px 28px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+
+  .cta:hover { background: #1976d2; text-decoration: none; }
+
+  footer {
+    text-align: center;
+    padding: 32px 24px;
+    font-size: 0.8rem;
+    color: #334455;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 1.7rem; }
+    article { padding: 32px 16px 64px; }
+    pre { padding: 14px 12px; font-size: 0.8rem; }
+  }
+</style>
+<script src="/analytics/tracker.js" defer></script>
+</head>
+<body>
+
+<header class="hero">
+  <h1>Inside HEDIS: A Claims-Based Implementation from Scratch</h1>
+  <p class="lead">
+    What does it actually take to implement HEDIS quality measures from raw Medicare claims data?
+    We built it to find out.
+  </p>
+  <p class="meta">
+    Built with <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a>
+    &middot; <a href="https://github.com/yzaya/hedis-analytics" target="_blank" rel="noopener">GitHub</a>
+  </p>
+</header>
+
+<article>
+
+<p>
+  HEDIS is the quality measurement framework used by nearly every U.S. health plan — roughly 90 measures
+  across preventive care, chronic disease management, mental health, and utilization. The spec is
+  published. The measures are well-documented. What's harder to find is a clear picture of what
+  the implementation actually looks like: what data you need, how you structure it, and where
+  a claims-only approach runs out of road.
+</p>
+
+<p>
+  This project is a learning exercise with two goals: get hands-on with HEDIS development at a
+  technical level, and learn how to work effectively with AI to do it. Both matter. In 2026,
+  knowing how to direct AI toward a domain-specific problem — and knowing when to push back on
+  what it produces — is becoming as valuable as the domain knowledge itself.
+</p>
+
+<h2>The Data</h2>
+
+<p>
+  The source is the <a href="https://data.cms.gov/collection/synthetic-medicare-enrollment-fee-for-service-claims-and-prescription-drug-event" target="_blank" rel="noopener">CMS Synthetic Medicare Enrollment, FFS Claims, and PDE dataset</a> —
+  generated using Synthea, structured identically to real Medicare claims. Same column names,
+  same file formats, same quirks. It's the closest thing to real CMS data you can work with
+  without a data use agreement.
+</p>
+
+<p>The full download is nine files, about 940 MB unzipped:</p>
+
+<table>
+  <thead><tr><th>Table</th><th>Rows</th><th>Contents</th></tr></thead>
+  <tbody>
+    <tr><td>beneficiary</td><td>8,246</td><td>Enrollment, demographics, death dates</td></tr>
+    <tr><td>inpatient</td><td>58,066</td><td>Hospital admissions and discharges</td></tr>
+    <tr><td>outpatient</td><td>575,092</td><td>Facility outpatient and ED claims</td></tr>
+    <tr><td>carrier</td><td>1,121,004</td><td>Physician and professional services</td></tr>
+    <tr><td>dme</td><td>103,828</td><td>Durable medical equipment</td></tr>
+    <tr><td>hha</td><td>6,215</td><td>Home health</td></tr>
+    <tr><td>hospice</td><td>12,107</td><td>Hospice</td></tr>
+    <tr><td>snf</td><td>12,548</td><td>Skilled nursing facility</td></tr>
+    <tr><td>pde</td><td>515,520</td><td>Part D prescription drug events</td></tr>
+  </tbody>
+</table>
+
+<p>
+  Claim dates span April 2015 through October 2022. The most recent fully covered calendar year
+  is 2021 — that's the measurement year for everything that follows.
+</p>
+
+<div class="callout">
+  The beneficiary file choice matters more than it looks. We initially downloaded the 2025 file,
+  then switched to the 2021 file. The 2025 file records deaths through 2025 — anyone who died
+  between 2022 and 2025 would be incorrectly excluded from a 2021 denominator. The 2021 file
+  reflects who was actually enrolled that year.
+</div>
+
+<h2>The Schema</h2>
+
+<p>
+  Nine tables in SQL Server 2022 Developer Edition running on Linux (Pop!_OS), one per source
+  file. SQL Server has supported Linux since 2017 — Developer Edition is free and carries all
+  Enterprise features, licensed for development and testing. Every column name matches the CMS
+  source exactly — no renaming, no snake_case translation. This is a deliberate choice: it keeps
+  the schema recognizable to anyone who has worked with CMS data, and it eliminates a class of
+  bugs that comes from maintaining a column name map between the source and the database.
+</p>
+
+<pre><code><span class="cm">-- dates arrive as 'DD-Mon-YYYY' strings, e.g. '14-Jun-2021'</span>
+<span class="cm">-- stored as VARCHAR(15), converted at query time</span>
+<span class="kw">CREATE TABLE</span> inpatient (
+    BENE_ID          <span class="nb">VARCHAR</span>(<span class="nu">15</span>) <span class="kw">NOT NULL</span>,
+    CLM_FROM_DT      <span class="nb">VARCHAR</span>(<span class="nu">15</span>),   <span class="cm">-- admission date</span>
+    CLM_THRU_DT      <span class="nb">VARCHAR</span>(<span class="nu">15</span>),   <span class="cm">-- discharge date</span>
+    CLM_LINE_NUM     <span class="nb">INT</span>,           <span class="cm">-- 1 = header record</span>
+    PRNCPAL_DGNS_CD  <span class="nb">VARCHAR</span>(<span class="nu">7</span>),   <span class="cm">-- principal ICD-10 diagnosis</span>
+    ICD_DGNS_CD1     <span class="nb">VARCHAR</span>(<span class="nu">7</span>),   <span class="cm">-- secondary diagnoses CD1-CD25</span>
+    <span class="cm">-- ...</span>
+    HCPCS_CD         <span class="nb">VARCHAR</span>(<span class="nu">15</span>),
+    REV_CNTR         <span class="nb">VARCHAR</span>(<span class="nu">4</span>)
+);</code></pre>
+
+<p>
+  The ETL is Python with <code>pyodbc</code> and <code>pandas</code>, loading each CSV in
+  5,000-row chunks with <code>fast_executemany</code>. The loader does one thing: move data
+  from files into tables. No business logic, no transformations, no measure code.
+</p>
+
+<h2>Which Measures Survived Contact with the Data</h2>
+
+<p>
+  HEDIS 2024 has 90+ measures. About half can be implemented from claims data alone — the rest
+  require EHR data, lab results, pharmacy NDC value sets, or CAHPS survey responses. Before
+  writing a single measure query, we ran coverage checks against the actual data: eligible
+  population size, diagnosis code presence, procedure code presence.
+</p>
+
+<p>
+  Eight measures were evaluated. Here's what we found:
+</p>
+
+<table>
+  <thead>
+    <tr><th>Measure</th><th>Name</th><th>Denominator</th><th>Rate</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>PCR</td><td>Plan All-Cause Readmissions</td>
+      <td>3,049 admissions</td>
+      <td class="status-good">31.9%</td>
+    </tr>
+    <tr>
+      <td>FUH</td><td>Follow-Up After MH Hospitalization</td>
+      <td>19 discharges</td>
+      <td class="status-good">68.4% / 84.2%</td>
+    </tr>
+    <tr>
+      <td>COL</td><td>Colorectal Cancer Screening</td>
+      <td>4,860 eligible</td>
+      <td class="status-good">26.6%</td>
+    </tr>
+    <tr>
+      <td>IET</td><td>Initiation &amp; Engagement of SUD Treatment</td>
+      <td>168 episodes</td>
+      <td class="status-good">6.5% engagement</td>
+    </tr>
+    <tr>
+      <td>AAB</td><td>Avoidance of Antibiotics for Bronchitis</td>
+      <td>825 episodes</td>
+      <td class="status-warn">98.3% †</td>
+    </tr>
+    <tr>
+      <td>AMR</td><td>Asthma Medication Ratio</td>
+      <td>59 members</td>
+      <td class="status-warn">78.0% †</td>
+    </tr>
+    <tr>
+      <td>FUM</td><td>Follow-Up After ED Visit for MH</td>
+      <td>0</td>
+      <td class="status-drop">N/A ‡</td>
+    </tr>
+    <tr>
+      <td>ABA</td><td>Adult BMI Assessment</td>
+      <td>341 eligible</td>
+      <td class="status-drop">Dropped §</td>
+    </tr>
+  </tbody>
+</table>
+
+<p style="font-size:0.85rem; color: var(--text-muted); margin-top: -12px;">
+  † NDC drug classification uses placeholder labeler prefixes — the NCQA value sets are not bundled with the synthetic data.<br>
+  ‡ ED revenue center codes (0450–0459) are not populated on outpatient claims in this dataset.<br>
+  § Z68.x BMI documentation codes are absent from Synthea-generated data.
+</p>
+
+<p>
+  The dropped measures and the caveated ones are as informative as the clean implementations.
+  They map the boundary between what claims-based HEDIS can do and what requires additional
+  data sources — which is exactly the question a real health plan analytics team asks when
+  scoping a new HEDIS program.
+</p>
+
+<h2>PCR — Plan All-Cause Readmissions</h2>
+
+<p>
+  The cleanest measure in the set. Index admissions are inpatient discharges in 2021;
+  the numerator is any subsequent inpatient stay within 30 days. The key detail is
+  <code>CLM_LINE_NUM = 1</code> — inpatient claims have one row per revenue line, so
+  the header record has to be selected explicitly to avoid counting individual service
+  lines as separate admissions.
+</p>
+
+<pre><code><span class="kw">WITH</span> index_admissions <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        BENE_ID,
+        <span class="fn">CONVERT</span>(<span class="nb">date</span>, CLM_FROM_DT, <span class="nu">106</span>)  <span class="kw">AS</span> admit_dt,
+        <span class="fn">CONVERT</span>(<span class="nb">date</span>, CLM_THRU_DT, <span class="nu">106</span>)  <span class="kw">AS</span> discharge_dt
+    <span class="kw">FROM</span> inpatient
+    <span class="kw">WHERE</span> CLM_LINE_NUM = <span class="nu">1</span>
+      <span class="kw">AND</span> <span class="fn">CONVERT</span>(<span class="nb">date</span>, CLM_FROM_DT, <span class="nu">106</span>) <span class="kw">BETWEEN</span> <span class="st">'2021-01-01'</span> <span class="kw">AND</span> <span class="st">'2021-12-31'</span>
+),
+readmissions <span class="kw">AS</span> (
+    <span class="kw">SELECT DISTINCT</span> i.BENE_ID, i.admit_dt
+    <span class="kw">FROM</span> index_admissions i
+    <span class="kw">JOIN</span> inpatient r
+        <span class="kw">ON</span>  i.BENE_ID = r.BENE_ID
+        <span class="kw">AND</span> r.CLM_LINE_NUM = <span class="nu">1</span>
+        <span class="kw">AND</span> <span class="fn">CONVERT</span>(<span class="nb">date</span>, r.CLM_FROM_DT, <span class="nu">106</span>) &gt; i.discharge_dt
+        <span class="kw">AND</span> <span class="fn">CONVERT</span>(<span class="nb">date</span>, r.CLM_FROM_DT, <span class="nu">106</span>) &lt;= <span class="fn">DATEADD</span>(day, <span class="nu">30</span>, i.discharge_dt)
+)
+<span class="kw">SELECT</span>
+    i.BENE_ID, i.admit_dt, i.discharge_dt,
+    <span class="kw">CASE WHEN</span> r.BENE_ID <span class="kw">IS NOT NULL THEN</span> <span class="nu">1</span> <span class="kw">ELSE</span> <span class="nu">0</span> <span class="kw">END AS</span> readmitted_30_day
+<span class="kw">FROM</span> index_admissions i
+<span class="kw">LEFT JOIN</span> readmissions r
+    <span class="kw">ON</span>  i.BENE_ID = r.BENE_ID
+    <span class="kw">AND</span> i.admit_dt = r.admit_dt;</code></pre>
+
+<table>
+  <thead><tr><th>Denominator</th><th>Numerator</th><th>Rate</th></tr></thead>
+  <tbody>
+    <tr><td>3,049 index admissions</td><td>972 readmitted within 30 days</td><td>31.9%</td></tr>
+  </tbody>
+</table>
+
+<p>
+  The 31.9% rate is roughly double the real-world Medicare average (~15%). Synthea doesn't
+  model realistic care-transition behavior, so readmissions are overrepresented in the
+  synthetic data. The logic is correct — the same query against real claims would produce
+  a meaningful rate.
+</p>
+
+<h2>FUH — Follow-Up After Hospitalization for Mental Illness</h2>
+
+<p>
+  For members discharged from a psychiatric inpatient stay, did they receive an outpatient
+  follow-up within 7 or 30 days? Three tables involved: inpatient identifies the index
+  discharge, carrier and outpatient together form the follow-up visit pool.
+</p>
+
+<p>
+  The mental illness diagnosis filter is <code>PRNCPAL_DGNS_CD LIKE 'F%' AND SUBSTRING(..., 2, 2) BETWEEN '20' AND '99'</code> — ICD-10 F20 through F99, which covers schizophrenia, mood disorders, anxiety, personality disorders, and more, while excluding F00-F19 (substance use disorders, which have their own measure: IET).
+</p>
+
+<table>
+  <thead><tr><th>Window</th><th>Denominator</th><th>Numerator</th><th>Rate</th></tr></thead>
+  <tbody>
+    <tr><td>7-day</td><td>19 discharges</td><td>13</td><td>68.4%</td></tr>
+    <tr><td>30-day</td><td>19 discharges</td><td>16</td><td>84.2%</td></tr>
+  </tbody>
+</table>
+
+<p>
+  Small denominator — 8,246 synthetic members don't produce many psychiatric hospitalizations.
+  The rates are higher than real-world HEDIS averages (35–40% at 7 days, 50–55% at 30 days),
+  which makes sense: Synthea schedules follow-up visits regularly without modeling the
+  care-coordination gaps that drive low real-world rates. The measure structure is clean
+  and has no data caveats.
+</p>
+
+<h2>Where Claims Run Out</h2>
+
+<p>
+  Three failure modes appeared, each worth understanding:
+</p>
+
+<h3>Missing procedure codes (ABA, BCS)</h3>
+<p>
+  Adult BMI Assessment requires Z68.x BMI documentation codes. Breast Cancer Screening
+  requires mammography HCPCS codes (77065–77067). Both are absent from Synthea-generated
+  data. The denominators built correctly — 341 members with qualifying office visits for ABA,
+  2,071 eligible women for BCS — but the numerators returned zero. Synthea generates
+  diagnosis codes reliably but is sparse on documentation and screening procedure codes.
+</p>
+
+<h3>Missing claim types (FUM)</h3>
+<p>
+  Follow-Up After ED Visit for Mental Illness requires outpatient claims with ED revenue
+  center codes (0450–0459) and a mental illness principal diagnosis. The revenue center
+  field is not populated on outpatient claims in this dataset. Zero qualifying ED visits
+  found. The query structure is correct — it would work against real Medicare outpatient data.
+</p>
+
+<h3>Missing reference data (AAB, AMR)</h3>
+<p>
+  Antibiotic Avoidance and Asthma Medication Ratio both require NDC drug classification —
+  identifying which prescriptions are antibiotics (AAB) or controller vs. reliever asthma
+  medications (AMR). The NCQA publishes these value sets as part of the HEDIS specification,
+  but they're licensed content not bundled with the CMS synthetic data. Both measures are
+  implemented with placeholder NDC labeler-prefix lists. The rates they produce (98.3% and 78.0%)
+  are not meaningful without the full value sets.
+</p>
+
+<div class="callout">
+  The NDC gap is a real production constraint too — health plans that implement HEDIS have to
+  maintain licensed NDC reference tables and update them annually. It's one of the reasons
+  pharmacy-intensive measures are often phased in after claims-based measures are stable.
+</div>
+
+<h2>The Measures</h2>
+
+<p>
+  The full implementation — all 8 measures, denominator and numerator queries, rate calculations,
+  member-level results, and conclusions — is in the notebook below.
+</p>
+
+<p style="text-align: center; margin-top: 32px;">
+  <a href="measures.html" class="cta">View the measures notebook &rarr;</a>
+</p>
+
+</article>
+
+<footer>
+  Data: CMS Synthetic Medicare Enrollment, FFS Claims, and PDE Dataset &middot; Measurement year 2021 &middot; Pending review and citations
+  &middot; <a href="https://github.com/yzaya/hedis-analytics" target="_blank" rel="noopener" style="color:#334455; border-bottom: 1px dotted #334455;">GitHub</a>
+</footer>
+
+</body>
+</html>

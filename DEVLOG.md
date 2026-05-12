@@ -535,3 +535,61 @@ over code dump.
 
 `web/hedis.html` subsequently moved to `archive/` on 2026-05-12 — page to be
 rebuilt with updated results before deployment.
+
+---
+
+## 2026-05-12 — Combined Notebook, Results, and Website Rebuild
+
+### What was done
+
+**Combined measures notebook** — All 8 measures consolidated from individual
+`.ipynb` files into a single `measures/measures.ipynb` with a TOC, one shared
+connection cell, and consistent `## Measure / ### Subsection` hierarchy.
+Individual `.ipynb` files retired. The `.sql` files are kept as standalone
+artifacts.
+
+**All measures run** — Export cells executed for all measures. Actual results:
+
+| Measure | Denominator | Rate | Notes |
+|---|---|---|---|
+| AAB | 825 episodes | 98.3% | NDC placeholder |
+| ABA | 341 eligible | — | Z68.x absent, dropped |
+| AMR | 59 | 78.0% | NDC placeholder |
+| COL | 4,860 | 26.6% | 2-year look-back |
+| FUH | 19 discharges | 68.4% / 84.2% | 7-day / 30-day |
+| FUM | 0 | N/A | ED revenue codes absent |
+| IET | 168 episodes | 100% init / 6.5% engagement | 100% is Synthea artifact |
+| PCR | 3,049 admissions | 31.9% | ~2× real-world, expected |
+
+FUH and PCR numbers shifted slightly from the original Phase 6 run due to
+query differences in the combined notebook. The combined notebook numbers
+are the authoritative results.
+
+**Conclusion cells filled** — All placeholder conclusions replaced with actual
+numbers and interpretation, including honest notes on where synthetic data
+limits the results.
+
+**Repo cleanup** — `results/summary.md` deleted (redundant with notebook TOC).
+README updated with actual results table. Individual `.ipynb` files removed
+from git. `plan/` directory created for private working files, added to
+`.gitignore`.
+
+**Website rebuilt** — `web/hedis.html` rewritten from scratch. New framing:
+learning exercise with two goals (HEDIS implementation + working with AI).
+Tone matched to `waves.html` — concrete, direct, no throat-clearing. Includes
+measures table with actual results, PCR SQL walkthrough, FUH results, and
+a dedicated section on where claims-based data runs out (FUM, ABA, NDC gaps).
+`web/measures.html` generated via `jupyter nbconvert`.
+
+### Decisions made
+
+**"We" framing** — The page introduces the project as a collaboration and
+uses "we" once at the top, then drops it. The work speaks for itself.
+
+**AI collaboration is front and center** — The framing explicitly names
+working with AI as a skill being developed alongside the HEDIS knowledge.
+This is honest and increasingly relevant in 2026.
+
+**Accuracy review pending** — The page has not been formally verified for
+clinical accuracy or benchmark citations before deployment. Flagged in
+`plan/website_plan.md`.
